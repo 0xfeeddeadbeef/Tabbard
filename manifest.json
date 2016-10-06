@@ -1,0 +1,13 @@
+{
+  "name": "Tabbard",
+  "version": "1.0.0.0",
+  "description": "Export open tab URLs to clipboard",
+  "icons": {},
+  "background": { "scripts": ["background.js"] },
+  "browser_action": {
+    "default_icon": "arrow_in.png",
+    "default_title": "Export URLs"
+  },
+  "permissions": ["tabs", "clipboardWrite"],
+  "manifest_version": 2
+}
