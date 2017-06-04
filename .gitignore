@@ -289,3 +289,6 @@ CMakeCache.txt
 
 # Sublime Text shit
 *.sublime-workspace
+
+.eslintrc.json
+
