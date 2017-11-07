@@ -1,5 +1,26 @@
+/*
+Copyright (c) 2017 George Chakhidze
 
-var copyText = [];
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+let copyText = [];
 
 function start(tab) {
     copyText = [];
@@ -10,12 +31,12 @@ function start(tab) {
 }
 
 function getAllTabs(windows) {
-    var numWindows = windows.length;
-    for (var i = 0; i < numWindows; i++) {
-        var win = windows[i];
-        var numTabs = win.tabs.length;
-        for (var j = 0; j < numTabs; j++) {
-            var tab = win.tabs[j];
+    const numWindows = windows.length;
+    for (let i = 0; i < numWindows; i++) {
+        const win = windows[i];
+        const numTabs = win.tabs.length;
+        for (let j = 0; j < numTabs; j++) {
+            const tab = win.tabs[j];
             copyText.push(tab.title + '\r\n' + tab.url + '\r\n\r\n');
         }
     }
@@ -28,9 +49,9 @@ function getAllTabs(windows) {
 }
 
 function copyTextToClipboard(text) {
-    var copyFrom = document.createElement('textarea');
+    const copyFrom = document.createElement('textarea');
     copyFrom.textContent = text;
-    var body = document.getElementsByTagName('body')[0];
+    const body = document.getElementsByTagName('body')[0];
     body.appendChild(copyFrom);
     copyFrom.select();
     document.execCommand('copy');
@@ -38,3 +59,4 @@ function copyTextToClipboard(text) {
 }
 
 chrome.browserAction.onClicked.addListener(start);
+
