@@ -147,4 +147,5 @@
 .eslintrc.json export-ignore
 .editorconfig export-ignore
 README.md export-ignore
+appveyor.yml export-ignore
 
