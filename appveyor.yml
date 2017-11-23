@@ -23,6 +23,7 @@ install:
   - ps: (Get-Content -Path '.\manifest.json' -Encoding UTF8 -Raw -Force) -replace '1.0.0.0',"$($env:APPVEYOR_BUILD_VERSION)" | Set-Content -Path '.\manifest.json' -Encoding UTF8 -Force
   - git add -A
   - git commit -m IncrementVersion
+  - ps: Write-Output (Get-Content -Path '.\manifest.json' -Encoding UTF8 -Raw -Force)
 
 build_script:
   - cmd: git archive -o Tabbard.zip HEAD
@@ -38,17 +39,17 @@ deploy_script:
                 refresh_token = $env:GOOGLE_API_CLIENT_REFRESH_TOKEN
                 grant_type = 'refresh_token'
                 redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
-            } -TimeoutSec 30 -MaximumRedirection 10 -ErrorAction Stop -Verbose | Select-Object -ExpandProperty 'access_token'
+            } -TimeoutSec 30 -MaximumRedirection 10 -ErrorAction Stop | Select-Object -ExpandProperty 'access_token'
 
         Invoke-WebRequest -UseBasicParsing -Uri "https://www.googleapis.com/upload/chromewebstore/v1.1/items/$env:GOOGLE_APPSTORE_APPID" `
             -Headers @{
                 'Authorization' = "Bearer $GOOGLE_API_ACCESS_TOKEN"
                 'x-goog-api-version' = 2
-            } -Method Put -InFile '.\Tabbard.zip' -ErrorAction Stop -Verbose
+            } -Method Put -InFile '.\Tabbard.zip' -ErrorAction Stop
 
         Invoke-WebRequest -UseBasicParsing -Uri "https://www.googleapis.com/chromewebstore/v1.1/items/$env:GOOGLE_APPSTORE_APPID/publish" `
             -Headers @{
                 'Authorization' = "Bearer $GOOGLE_API_ACCESS_TOKEN"
                 'x-goog-api-version' = 2
                 'Content-Length' = 0
-            } -Method Post -ErrorAction Stop -Verbose
+            } -Method Post -ErrorAction Stop
