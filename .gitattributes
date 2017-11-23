@@ -142,3 +142,9 @@
 *.in text eol=lf
 *.sh text eol=lf
 
+.gitignore export-ignore
+.gitattributes export-ignore
+.eslintrc.json export-ignore
+.editorconfig export-ignore
+README.md export-ignore
+
