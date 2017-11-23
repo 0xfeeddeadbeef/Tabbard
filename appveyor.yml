@@ -14,7 +14,6 @@ init:
 
 clone_folder: C:\Projects\Tabbard
 shallow_clone: false
-clone_depth: 1
 
 matrix:
   fast_finish: true
@@ -22,8 +21,7 @@ matrix:
 install:
   - ps: (Get-Content -Path '.\manifest.json' -Encoding UTF8 -Raw -Force) -replace '1.0.0.0',"$($env:APPVEYOR_BUILD_VERSION)" | Set-Content -Path '.\manifest.json' -Encoding UTF8 -Force
   - git add -A
-  - git commit -m IncrementVersion
-  - ps: Write-Output (Get-Content -Path '.\manifest.json' -Encoding UTF8 -Raw -Force)
+  - git commit -m "Increment version"
 
 build_script:
   - cmd: git archive -o Tabbard.zip HEAD
@@ -45,11 +43,11 @@ deploy_script:
             -Headers @{
                 'Authorization' = "Bearer $GOOGLE_API_ACCESS_TOKEN"
                 'x-goog-api-version' = 2
-            } -Method Put -InFile '.\Tabbard.zip' -ErrorAction Stop
+            } -Method Put -InFile '.\Tabbard.zip' -ErrorAction Stop | Out-Null
 
         Invoke-WebRequest -UseBasicParsing -Uri "https://www.googleapis.com/chromewebstore/v1.1/items/$env:GOOGLE_APPSTORE_APPID/publish" `
             -Headers @{
                 'Authorization' = "Bearer $GOOGLE_API_ACCESS_TOKEN"
                 'x-goog-api-version' = 2
                 'Content-Length' = 0
-            } -Method Post -ErrorAction Stop
+            } -Method Post -ErrorAction Stop | Out-Null

@@ -3,7 +3,6 @@
   "name": "Tabbard",
   "short_name": "Tabbard",
   "version": "1.0.0.0",
-  "version_name": "1.0 beta",
   "description": "Copy all open tab URLs to clipboard",
   "minimum_chrome_version": "22.0.0.0",
   "icons": {
