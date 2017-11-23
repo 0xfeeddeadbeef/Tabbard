@@ -7,9 +7,9 @@ branches:
     - master
 
 init:
-  - git config --global core.autocrlf true
-  - git config --global user.email "appveyor@example.com"
-  - git config --global user.name "AppVeyor"
+  - git config --local core.autocrlf true
+  - git config --local user.email "appveyor@example.com"
+  - git config --local user.name "AppVeyor"
 
 clone_folder: C:\Projects\Tabbard
 shallow_clone: false
