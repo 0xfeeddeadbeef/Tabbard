@@ -7,6 +7,11 @@ branches:
 max_jobs: 1
 image: Visual Studio 2017
 
+init:
+  - git config --global core.autocrlf true
+  - git config --global user.email "appveyor@example.com"
+  - git config --global user.name "AppVeyor"
+
 clone_folder: C:\Projects\Tabbard
 shallow_clone: false
 clone_depth: 1
@@ -16,8 +21,8 @@ matrix:
 
 install:
   - ps: (Get-Content -Path '.\manifest.json' -Encoding UTF8 -Raw -Force) -replace '1.0.0.0',"$($env:APPVEYOR_BUILD_VERSION)" | Set-Content -Path '.\manifest.json' -Encoding UTF8 -Force
-  - cmd: git add -A
-  - cmd: git commit -m IncrementVersion
+  - git add -A
+  - git commit -m IncrementVersion
 
 build_script:
   - cmd: git archive -o Tabbard.zip HEAD
