@@ -20,6 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+'use strict';
+
 let copyText = [];
 
 function start(tab) {
@@ -31,21 +33,29 @@ function start(tab) {
 }
 
 function getAllTabs(windows) {
-    const numWindows = windows.length;
-    for (let i = 0; i < numWindows; i++) {
-        const win = windows[i];
-        const numTabs = win.tabs.length;
-        for (let j = 0; j < numTabs; j++) {
-            const tab = win.tabs[j];
-            copyText.push(tab.title + '\r\n' + tab.url + '\r\n\r\n');
-        }
-    }
+    chrome.storage.local.get(['dontCopyTitles'], function (items) {
+        let dontCopyTitles = items ? items.dontCopyTitles : false;
 
-    if (copyText) {
-        if (copyText.length > 0) {
-            copyTextToClipboard(copyText.join(''))
+        const numWindows = windows.length;
+        for (let i = 0; i < numWindows; i++) {
+            const win = windows[i];
+            const numTabs = win.tabs.length;
+            for (let j = 0; j < numTabs; j++) {
+                const tab = win.tabs[j];
+                if (dontCopyTitles) {
+                    copyText.push(tab.url + '\r\n');
+                } else {
+                    copyText.push(tab.title + '\r\n' + tab.url + '\r\n\r\n');
+                }
+            }
         }
-    }
+
+        if (copyText) {
+            if (copyText.length > 0) {
+                copyTextToClipboard(copyText.join(''))
+            }
+        }
+    });
 }
 
 function copyTextToClipboard(text) {

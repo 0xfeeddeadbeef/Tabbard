@@ -10,7 +10,7 @@ init:
   - git config --global core.autocrlf true
 
 clone_folder: C:\Projects\Tabbard
-shallow_clone: false
+shallow_clone: true
 
 matrix:
   fast_finish: true
