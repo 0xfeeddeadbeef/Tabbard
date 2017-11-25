@@ -8,6 +8,8 @@ branches:
 
 init:
   - git config --global core.autocrlf true
+  - git config --global user.email "appveyor@example.com"
+  - git config --global user.name "AppVeyor"
 
 clone_folder: C:\Projects\Tabbard
 shallow_clone: true
@@ -16,8 +18,6 @@ matrix:
   fast_finish: true
 
 install:
-  - git config --local user.email "appveyor@example.com"
-  - git config --local user.name "AppVeyor"
   - ps: (Get-Content -Path '.\manifest.json' -Encoding UTF8 -Raw -Force) -replace '1.0.0.0',"$($env:APPVEYOR_BUILD_VERSION)" | Set-Content -Path '.\manifest.json' -Encoding UTF8 -Force
   - git add -A
   - git commit -m "Increment version"
