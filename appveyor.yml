@@ -12,7 +12,7 @@ init:
   - git config --global user.name "AppVeyor"
 
 clone_folder: C:\Projects\Tabbard
-shallow_clone: true
+shallow_clone: false
 
 matrix:
   fast_finish: true
