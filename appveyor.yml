@@ -50,3 +50,7 @@ deploy_script:
                 'x-goog-api-version' = 2
                 'Content-Length' = 0
             } -Method Post -ErrorAction Stop | Out-Null
+
+artifacts:
+  - path: Tabbard.zip
+    name: Tabbard
