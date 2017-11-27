@@ -92,7 +92,7 @@ chrome.contextMenus.create({
     id: TABBARD_CONTEXT_MENU_ITEM_ID,
     enabled: true,
     type: 'normal',
-    title: 'Copy all open tab URLs',
+    title: 'Copy all tab URLs',
     contexts: contexts
 });
 
