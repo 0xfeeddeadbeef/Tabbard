@@ -34,7 +34,13 @@
     },
     "default_title": "Copy All Open Tab URLs"
   },
-  "permissions": ["tabs", "clipboardWrite", "storage"],
+  "permissions": [
+    "activeTab",
+    "clipboardWrite",
+    "contextMenus",
+    "storage",
+    "tabs"
+  ],
   "options_ui": {
     "page": "options.html",
     "browser_style": true

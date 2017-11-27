@@ -22,6 +22,7 @@ SOFTWARE.
 
 'use strict';
 
+const TABBARD_CONTEXT_MENU_ITEM_ID = "c49bb168-99b0-479f-b560-30c6b4cc067a";
 let copyText = [];
 
 function start(tab) {
@@ -30,6 +31,12 @@ function start(tab) {
         "populate": true,
         "windowTypes": ["normal"]
     }, getAllTabs);
+}
+
+function startContextMenu(info, tab) {
+    if (info.menuItemId === TABBARD_CONTEXT_MENU_ITEM_ID) {
+        start(tab);
+    }
 }
 
 function getAllTabs(windows) {
@@ -70,3 +77,23 @@ function copyTextToClipboard(text) {
 
 chrome.browserAction.onClicked.addListener(start);
 
+
+// HACK: Detect Google Chrome. This is an unreliable hack. Watch out!
+// Chrome does not support 'browser' namespace/object and there is no chrome.runtime.getBrowserInfo() function
+let isChrome = typeof browser === "undefined";
+let contexts = ['tab']; // Firefox will put new item inside tab system menu
+
+if (isChrome) {
+    // Chrome does not support 'tab' context menu, — fallback to 'page' — better than nothing:
+    contexts = ['page'];
+}
+
+chrome.contextMenus.create({
+    id: TABBARD_CONTEXT_MENU_ITEM_ID,
+    enabled: true,
+    type: 'normal',
+    title: 'Copy all open tab URLs',
+    contexts: contexts
+});
+
+chrome.contextMenus.onClicked.addListener(startContextMenu);
