@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Tabbard",
   "short_name": "Tabbard",
-  "version": "1.1.0.0",
+  "version": "1.2.0.0",
   "description": "Copy Tab URLs to Clipboard",
   "minimum_chrome_version": "23.0.0.0",
   "icons": {

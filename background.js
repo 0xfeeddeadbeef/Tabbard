@@ -134,10 +134,10 @@ chrome.browserAction.onClicked.addListener(start);
 // HACK: Detect Google Chrome. This is an unreliable hack. Watch out!
 // Chrome does not support 'browser' namespace/object and there is no chrome.runtime.getBrowserInfo() function
 let isChrome = typeof browser === 'undefined';
-let contexts = ['tab']; // Firefox will put new item inside tab system menu
+let contexts = ['tab', 'page']; // Firefox can put menu item inside tab system menu
 
 if (isChrome) {
-    // Chrome does not support 'tab' context menu, — fallback to 'page' — better than nothing:
+    // Chrome does not support 'tab' context menu, — fallback to 'page':
     contexts = ['page'];
 }
 
