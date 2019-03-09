@@ -22,26 +22,72 @@ SOFTWARE.
 
 'use strict';
 
-const TABBARD_CONTEXT_MENU_ITEM_ID = "c49bb168-99b0-479f-b560-30c6b4cc067a";
+const TABBARD_CONTEXT_MENU_ITEM_ID = 'c49bb168-99b0-479f-b560-30c6b4cc067a';
+
 let copyText = [];
 
+/**
+ * Event handler for the extension tool bar icon.
+ * @param {Object} tab - Unused. Currently focused tab.
+ */
 function start(tab) {
     copyText = [];
-    chrome.windows.getAll({
-        "populate": true,
-        "windowTypes": ["normal"]
-    }, getAllTabs);
+    chrome.storage.local.get(['copyOnlyCurrentWindow'], function (items) {
+        let copyOnlyCurrentWindow = items ? items.copyOnlyCurrentWindow : false;
+        if (copyOnlyCurrentWindow) {
+            chrome.windows.getCurrent({
+                'populate': true,
+                'windowTypes': ['normal', 'popup']
+            }, function (win) {
+                getAllTabs([win]);
+            })
+        } else {
+            chrome.windows.getAll({
+                'populate': true,
+                'windowTypes': ['normal', 'popup']
+            }, getAllTabs);
+        }
+    });
 }
 
+/**
+ * Event handler for the context menu item.
+ * @param {Object} info - The information about the context menu item.
+ * @param {Object} tab - The current tab.
+ */
 function startContextMenu(info, tab) {
     if (info.menuItemId === TABBARD_CONTEXT_MENU_ITEM_ID) {
         start(tab);
     }
 }
 
+/**
+ * Determines whether there exist additional highlighted tabs except the active ones.
+ * @param {Object[]} windows - The array of windows.
+ */
+function isAnyTabHighlighted(windows) {
+    const numWindows = windows.length;
+    for (let i = 0; i < numWindows; i++) {
+        const win = windows[i];
+        const numTabs = win.tabs.length;
+        for (let j = 0; j < numTabs; j++) {
+            const tab = win.tabs[j];
+            if (!tab.active && tab.highlighted) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * Copies URLs of specified windows.
+ * @param {Object[]} windows - The array of browser windows.
+ */
 function getAllTabs(windows) {
     chrome.storage.local.get(['dontCopyTitles'], function (items) {
         let dontCopyTitles = items ? items.dontCopyTitles : false;
+        let isAnyTabHighlightedExceptActiveOnes = isAnyTabHighlighted(windows);
 
         const numWindows = windows.length;
         for (let i = 0; i < numWindows; i++) {
@@ -49,6 +95,9 @@ function getAllTabs(windows) {
             const numTabs = win.tabs.length;
             for (let j = 0; j < numTabs; j++) {
                 const tab = win.tabs[j];
+                if (isAnyTabHighlightedExceptActiveOnes && !tab.highlighted) {
+                    continue;
+                }
                 if (dontCopyTitles) {
                     copyText.push(tab.url + '\r\n');
                 } else {
@@ -65,6 +114,10 @@ function getAllTabs(windows) {
     });
 }
 
+/**
+ * Copies the specified text to the Clipboard.
+ * @param {string} text - The text to copy to the Clipboard.
+ */
 function copyTextToClipboard(text) {
     const copyFrom = document.createElement('textarea');
     copyFrom.textContent = text;
@@ -75,12 +128,12 @@ function copyTextToClipboard(text) {
     body.removeChild(copyFrom);
 }
 
-chrome.browserAction.onClicked.addListener(start);
 
+chrome.browserAction.onClicked.addListener(start);
 
 // HACK: Detect Google Chrome. This is an unreliable hack. Watch out!
 // Chrome does not support 'browser' namespace/object and there is no chrome.runtime.getBrowserInfo() function
-let isChrome = typeof browser === "undefined";
+let isChrome = typeof browser === 'undefined';
 let contexts = ['tab']; // Firefox will put new item inside tab system menu
 
 if (isChrome) {

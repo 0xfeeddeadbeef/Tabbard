@@ -2,9 +2,9 @@
   "manifest_version": 2,
   "name": "Tabbard",
   "short_name": "Tabbard",
-  "version": "1.0.0.0",
-  "description": "Copy all open tab URLs to clipboard",
-  "minimum_chrome_version": "22.0.0.0",
+  "version": "1.1.0.0",
+  "description": "Copy Tab URLs to Clipboard",
+  "minimum_chrome_version": "23.0.0.0",
   "icons": {
     "16": "assets/tabs-16x16.png",
     "24": "assets/tabs-24x24.png",
@@ -32,7 +32,7 @@
       "128": "assets/tabs-128x128.png",
       "256": "assets/tabs-256x256.png"
     },
-    "default_title": "Copy All Open Tab URLs"
+    "default_title": "Copy All Tab URLs"
   },
   "permissions": [
     "activeTab",

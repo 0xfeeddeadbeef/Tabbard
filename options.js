@@ -24,19 +24,21 @@ SOFTWARE.
 
 function saveOptions(e) {
     chrome.storage.local.set({
-        'dontCopyTitles': document.querySelector("#dontcopytitles").checked
+        'dontCopyTitles': document.querySelector("#dontcopytitles").checked,
+        'copyOnlyCurrentWindow': document.querySelector("#copyonlycurrentwindow").checked
     });
 
     e.preventDefault();
 }
 
 function restoreOptions() {
-    chrome.storage.local.get(['dontCopyTitles'], function (items) {
+    chrome.storage.local.get(['dontCopyTitles', 'copyOnlyCurrentWindow'], function (items) {
         document.querySelector("#dontcopytitles").checked = items ? items.dontCopyTitles : false;
+        document.querySelector("#copyonlycurrentwindow").checked = items ? items.copyOnlyCurrentWindow : false;
     });
 
     document.querySelector("#dontcopytitles").onchange = saveOptions;
+    document.querySelector("#copyonlycurrentwindow").onchange = saveOptions;
 }
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
-
