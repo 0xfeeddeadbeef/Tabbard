@@ -23,6 +23,8 @@ SOFTWARE.
 'use strict';
 
 const TABBARD_CONTEXT_MENU_ITEM_ID = 'c49bb168-99b0-479f-b560-30c6b4cc067a';
+const TABBARD_CONTEXT_MENU_ITEM_COPY_ALL = 'Copy all tab URLs';
+const TABBARD_CONTEXT_MENU_ITEM_COPY_SELECTED = 'Copy selected tab URLs';
 
 let copyText = [];
 
@@ -145,8 +147,26 @@ chrome.contextMenus.create({
     id: TABBARD_CONTEXT_MENU_ITEM_ID,
     enabled: true,
     type: 'normal',
-    title: 'Copy all tab URLs',
+    title: TABBARD_CONTEXT_MENU_ITEM_COPY_ALL,
     contexts: contexts
 });
 
 chrome.contextMenus.onClicked.addListener(startContextMenu);
+
+if (!isChrome) {
+    chrome.tabs.onHighlighted.addListener(function (highlightInfo) {
+        if (highlightInfo.tabIds) {
+            if (highlightInfo.tabIds.length > 1) {
+                chrome.contextMenus.update(TABBARD_CONTEXT_MENU_ITEM_ID, {
+                    title: TABBARD_CONTEXT_MENU_ITEM_COPY_SELECTED
+                });
+                chrome.browserAction.setTitle({ title: TABBARD_CONTEXT_MENU_ITEM_COPY_SELECTED });
+            } else {
+                chrome.contextMenus.update(TABBARD_CONTEXT_MENU_ITEM_ID, {
+                    title: TABBARD_CONTEXT_MENU_ITEM_COPY_ALL
+                });
+                chrome.browserAction.setTitle({ title: TABBARD_CONTEXT_MENU_ITEM_COPY_ALL });
+            }
+        }
+    });
+}
