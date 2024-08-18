@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2017 George Chakhidze
+Copyright (c) 2024 George Chakhidze
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,23 +28,34 @@ const TABBARD_CONTEXT_MENU_ITEM_COPY_SELECTED = 'Copy selected tab URLs';
 
 let copyText = [];
 
+chrome.action.onClicked.addListener((tab) => {
+    start();
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === TABBARD_CONTEXT_MENU_ITEM_ID) {
+        start(tab);
+    }
+});
+
 /**
  * Event handler for the extension tool bar icon.
  * @param {Object} tab - Unused. Currently focused tab.
  */
-function start(tab) {
+async function start(tab) {
     copyText = [];
-    chrome.storage.local.get(['copyOnlyCurrentWindow'], function (items) {
+
+    await chrome.storage.local.get(['copyOnlyCurrentWindow'], async function (items) {
         let copyOnlyCurrentWindow = items ? items.copyOnlyCurrentWindow : false;
         if (copyOnlyCurrentWindow) {
-            chrome.windows.getCurrent({
+            await chrome.windows.getCurrent({
                 'populate': true,
                 'windowTypes': ['normal', 'popup']
-            }, function (win) {
-                getAllTabs([win]);
+            }, async function (win) {
+                await getAllTabs([win]);
             })
         } else {
-            chrome.windows.getAll({
+            await chrome.windows.getAll({
                 'populate': true,
                 'windowTypes': ['normal', 'popup']
             }, getAllTabs);
@@ -53,22 +64,12 @@ function start(tab) {
 }
 
 /**
- * Event handler for the context menu item.
- * @param {Object} info - The information about the context menu item.
- * @param {Object} tab - The current tab.
- */
-function startContextMenu(info, tab) {
-    if (info.menuItemId === TABBARD_CONTEXT_MENU_ITEM_ID) {
-        start(tab);
-    }
-}
-
-/**
  * Determines whether there exist additional highlighted tabs except the active ones.
  * @param {Object[]} windows - The array of windows.
  */
 function isAnyTabHighlighted(windows) {
     const numWindows = windows.length;
+
     for (let i = 0; i < numWindows; i++) {
         const win = windows[i];
         const numTabs = win.tabs.length;
@@ -79,6 +80,7 @@ function isAnyTabHighlighted(windows) {
             }
         }
     }
+
     return false;
 }
 
@@ -86,12 +88,12 @@ function isAnyTabHighlighted(windows) {
  * Copies URLs of specified windows.
  * @param {Object[]} windows - The array of browser windows.
  */
-function getAllTabs(windows) {
-    chrome.storage.local.get(['dontCopyTitles'], function (items) {
+async function getAllTabs(windows) {
+    await chrome.storage.local.get(['dontCopyTitles'], async function (items) {
         let dontCopyTitles = items ? items.dontCopyTitles : false;
         let isAnyTabHighlightedExceptActiveOnes = isAnyTabHighlighted(windows);
-
         const numWindows = windows.length;
+
         for (let i = 0; i < numWindows; i++) {
             const win = windows[i];
             const numTabs = win.tabs.length;
@@ -110,63 +112,70 @@ function getAllTabs(windows) {
 
         if (copyText) {
             if (copyText.length > 0) {
-                copyTextToClipboard(copyText.join(''))
+                await addToClipboard(copyText.join(''))
             }
         }
     });
 }
 
-/**
- * Copies the specified text to the Clipboard.
- * @param {string} text - The text to copy to the Clipboard.
- */
-function copyTextToClipboard(text) {
-    const copyFrom = document.createElement('textarea');
-    copyFrom.textContent = text;
-    const body = document.getElementsByTagName('body')[0];
-    body.appendChild(copyFrom);
-    copyFrom.select();
-    document.execCommand('copy');
-    body.removeChild(copyFrom);
-}
-
-
-chrome.browserAction.onClicked.addListener(start);
-
-// HACK: Detect Google Chrome. This is an unreliable hack. Watch out!
-// Chrome does not support 'browser' namespace/object and there is no chrome.runtime.getBrowserInfo() function
-let isChrome = typeof browser === 'undefined';
+// Detect Chromium-based browser. This is an unreliable hack.
+// Chromium does not support 'browser' namespace/object and there is no chrome.runtime.getBrowserInfo() function
+let isChromium = typeof browser === 'undefined';
 let contexts = ['tab', 'page']; // Firefox can put menu item inside tab system menu
 
-if (isChrome) {
+if (isChromium) {
     // Chrome does not support 'tab' context menu, — fallback to 'page':
     contexts = ['page'];
 }
 
-chrome.contextMenus.create({
-    id: TABBARD_CONTEXT_MENU_ITEM_ID,
-    enabled: true,
-    type: 'normal',
-    title: TABBARD_CONTEXT_MENU_ITEM_COPY_ALL,
-    contexts: contexts
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.contextMenus.create({
+        id: TABBARD_CONTEXT_MENU_ITEM_ID,
+        enabled: true,
+        type: 'normal',
+        title: TABBARD_CONTEXT_MENU_ITEM_COPY_ALL,
+        contexts: contexts
+    });
 });
 
-chrome.contextMenus.onClicked.addListener(startContextMenu);
-
-if (!isChrome) {
+if (!isChromium) {
     chrome.tabs.onHighlighted.addListener(function (highlightInfo) {
         if (highlightInfo.tabIds) {
             if (highlightInfo.tabIds.length > 1) {
                 chrome.contextMenus.update(TABBARD_CONTEXT_MENU_ITEM_ID, {
                     title: TABBARD_CONTEXT_MENU_ITEM_COPY_SELECTED
                 });
-                chrome.browserAction.setTitle({ title: TABBARD_CONTEXT_MENU_ITEM_COPY_SELECTED });
+                chrome.action.setTitle({ title: TABBARD_CONTEXT_MENU_ITEM_COPY_SELECTED });
             } else {
                 chrome.contextMenus.update(TABBARD_CONTEXT_MENU_ITEM_ID, {
                     title: TABBARD_CONTEXT_MENU_ITEM_COPY_ALL
                 });
-                chrome.browserAction.setTitle({ title: TABBARD_CONTEXT_MENU_ITEM_COPY_ALL });
+                chrome.action.setTitle({ title: TABBARD_CONTEXT_MENU_ITEM_COPY_ALL });
             }
         }
     });
+}
+
+// Solution 1 - As of Aug 2024, service workers cannot directly interact with
+// the system clipboard using either `navigator.clipboard` or
+// `document.execCommand()`. To work around this, we'll create an offscreen
+// document and pass it the data we want to write to the clipboard.
+async function addToClipboard(value) {
+    await chrome.offscreen.createDocument({
+        url: 'offscreen.html',
+        reasons: [chrome.offscreen.Reason.CLIPBOARD],
+        justification: 'Write text to the clipboard.'
+    });
+    chrome.runtime.sendMessage({
+        type: 'copy-data-to-clipboard',
+        target: 'offscreen-doc',
+        data: value
+    });
+}
+
+// Solution 2 – Once extension service workers can use the Clipboard API,
+// replace the offscreen document based implementation with something like this.
+// eslint-disable-next-line no-unused-vars -- This is an alternative implementation
+async function addToClipboardV2(value) {
+    navigator.clipboard.writeText(value);
 }
