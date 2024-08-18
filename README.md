@@ -1,9 +1,5 @@
 # Tabbard
 
-> **Warning**
-> [Manifest v3](https://developer.chrome.com/docs/extensions/mv3/intro/mv3-overview/) will make this extension unusable.
-> It will no longer be possible to access the clipboard from a browser extension.
-
 The dead simple Chrome extension for copying all open tab URLs to clipboard.
 
 ## Installation
