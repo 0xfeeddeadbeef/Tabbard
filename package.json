@@ -1,0 +1,42 @@
+{
+  "name": "tabbard",
+  "version": "2.0.0",
+  "private": true,
+  "description": "The dead simple browser extension for copying all open tab URLs to clipboard.",
+  "homepage": "https://github.com/0xfeeddeadbeef/Tabbard",
+  "bugs": {
+    "url": "https://github.com/0xfeeddeadbeef/Tabbard/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0xfeeddeadbeef/Tabbard.git"
+  },
+  "license": "MIT",
+  "author": "0xfeeddeadbeef",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "package": "web-ext build"
+  },
+  "engines": {
+    "node": "^22.13.0 || >=24"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "web-ext": "^10.7.0"
+  },
+  "webExt": {
+    "artifactsDir": "dist",
+    "ignoreFiles": [
+      "**/*.md",
+      "eslint.config.mjs",
+      "package.json",
+      "package-lock.json"
+    ],
+    "build": {
+      "overwriteDest": true
+    }
+  }
+}
