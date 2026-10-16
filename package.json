@@ -16,15 +16,19 @@
   "type": "module",
   "scripts": {
     "lint": "eslint .",
-    "package": "web-ext build"
+    "lint:extension": "web-ext lint",
+    "package": "web-ext build",
+    "test:e2e": "node test/e2e.mjs"
   },
   "engines": {
     "node": "^22.13.0 || >=24"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@puppeteer/browsers": "^3.2.5",
     "eslint": "^10.12.0",
     "globals": "^17.13.0",
+    "puppeteer-core": "^25.14.0",
     "web-ext": "^10.8.0"
   },
   "webExt": {
@@ -33,7 +37,8 @@
       "**/*.md",
       "eslint.config.mjs",
       "package.json",
-      "package-lock.json"
+      "package-lock.json",
+      "test"
     ],
     "build": {
       "overwriteDest": true
