@@ -1,6 +1,6 @@
 {
   "name": "tabbard",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "description": "The dead simple browser extension for copying all open tab URLs to clipboard.",
   "homepage": "https://github.com/0xfeeddeadbeef/Tabbard",
