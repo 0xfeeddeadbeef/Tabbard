@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Tabbard",
   "short_name": "Tabbard",
-  "version": "2.0.0.0",
+  "version": "3.0.0",
   "description": "Copy Tab URLs to Clipboard",
   "minimum_chrome_version": "121",
   "icons": {
@@ -18,8 +18,13 @@
   },
   "background": {
     "service_worker": "background.js",
-    "scripts": ["background.js"],
-    "preferred_environment": ["document", "service_worker"]
+    "scripts": [
+      "background.js"
+    ],
+    "preferred_environment": [
+      "document",
+      "service_worker"
+    ]
   },
   "action": {
     "default_icon": {
@@ -50,7 +55,9 @@
       "id": "{bfc0cef6-5fbd-411b-8231-543248c55799}",
       "strict_min_version": "121.0",
       "data_collection_permissions": {
-        "required": ["none"]
+        "required": [
+          "none"
+        ]
       }
     }
   }
