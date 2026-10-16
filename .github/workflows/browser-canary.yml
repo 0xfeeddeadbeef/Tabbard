@@ -1,0 +1,152 @@
+# Loads Tabbard into current and upcoming Chrome and Firefox builds, copies tabs and checks
+# the clipboard (see test/e2e.mjs). Scheduled runs open a GitHub issue when something breaks,
+# and close it when everything passes again, so nobody has to follow browser release notes.
+# Beta, canary and nightly builds reach users weeks to months later, which leaves time to react.
+
+name: Browser canary
+
+on:
+  schedule:
+    - cron: '17 5 * * 1' # Mondays at 05:17 UTC
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '*.js'
+      - '*.html'
+      - 'manifest.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'test/**'
+      - '.github/workflows/browser-canary.yml'
+  pull_request:
+    paths:
+      - '*.js'
+      - '*.html'
+      - 'manifest.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'test/**'
+      - '.github/workflows/browser-canary.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browser-canary-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run lint:extension
+
+  e2e:
+    name: ${{ matrix.browser }} ${{ matrix.channel }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { browser: chrome, channel: stable }
+          - { browser: chrome, channel: beta }
+          - { browser: chrome, channel: canary }
+          - { browser: firefox, channel: esr }
+          - { browser: firefox, channel: stable }
+          - { browser: firefox, channel: beta }
+          - { browser: firefox, channel: nightly }
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Use the latest Puppeteer on scheduled runs
+        # An outdated Puppeteer may not be able to drive next month's browsers.
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: npm install --no-save puppeteer-core@latest @puppeteer/browsers@latest
+      - name: Install a virtual display and a clipboard tool
+        run: sudo apt-get update && sudo apt-get install --yes xvfb xclip
+      - name: Allow the Chrome sandbox
+        # Ubuntu 23.10+ restricts the unprivileged user namespaces that the Chrome sandbox needs.
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Run the canary
+        run: >-
+          xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24"
+          npm run test:e2e -- --browser ${{ matrix.browser }} --channel ${{ matrix.channel }}
+
+  report:
+    name: Report
+    needs: [lint, e2e]
+    if: >-
+      always()
+      && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+      && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUN_ID: ${{ github.run_id }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      LINT_RESULT: ${{ needs.lint.result }}
+      E2E_RESULT: ${{ needs.e2e.result }}
+    steps:
+      - name: Open, update or close the canary issue
+        run: |
+          set -euo pipefail
+          if [ "$LINT_RESULT" = cancelled ] || [ "$E2E_RESULT" = cancelled ]; then
+            echo "The run was cancelled; nothing to report."
+            exit 0
+          fi
+
+          label=browser-canary
+          gh label create "$label" --color d93f0b --description "Weekly browser compatibility tests" --force
+          issue=$(gh issue list --label "$label" --state open --limit 1 --json number --jq '.[0].number // empty')
+
+          if [ "$LINT_RESULT" = success ] && [ "$E2E_RESULT" = success ]; then
+            if [ -n "$issue" ]; then
+              gh issue close "$issue" --comment "All browser checks pass again: $RUN_URL"
+            fi
+            exit 0
+          fi
+
+          failed=$(gh run view "$RUN_ID" --json jobs --jq '.jobs[] | select(.conclusion == "failure") | "- \(.name)"')
+          failed=${failed:-- See the run.}
+          body=$(cat <<EOF
+          The browser canary failed: $RUN_URL
+
+          Failed jobs:
+          $failed
+
+          Each job's summary lists the failed checks with details. A failure in a beta, canary or nightly browser leaves time to react before that version reaches users. A failed "Uses the primary clipboard method" or "Background runs in the expected environment" check means that Tabbard still works through a fallback, but the browser changed.
+
+          This issue closes automatically when all checks pass again.
+          EOF
+          )
+
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body "$body"
+          else
+            gh issue create --title "Browser canary: Tabbard has problems in some browser versions" --label "$label" --body "$body"
+          fi
+
+      - name: Keep the schedule alive
+        # GitHub disables scheduled workflows in public repositories after 60 days without
+        # repository activity. Re-enabling the workflow through the API ahead of time prevents
+        # that without dummy commits, like the liskin/gh-workflow-keepalive action does.
+        if: github.event_name == 'schedule'
+        run: gh api --method PUT "repos/$GH_REPO/actions/workflows/browser-canary.yml/enable"

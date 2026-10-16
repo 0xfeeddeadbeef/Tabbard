@@ -1,17 +1,60 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
+    <title>Tabbard Options</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            font-family: system-ui, sans-serif;
+        }
+
+        label {
+            display: block;
+            margin: 0.5em 0;
+        }
+
+        #problem {
+            margin-top: 1em;
+            padding: 0 1em;
+            border: 1px solid #d93025;
+            border-radius: 6px;
+        }
+
+        #problem h2 {
+            font-size: 1.1em;
+        }
+
+        #problem pre {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .note {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+    </style>
 </head>
 <body>
-    <form>
-        <input type="checkbox" id="dontcopytitles">
-        <label>Do not copy site titles</label>
-        <br>
-        <input type="checkbox" id="copyonlycurrentwindow">
-        <label>Copy only currently focused window tabs</label>
-    </form>
+    <!-- The checkboxes stay disabled until options.js has loaded the saved settings. -->
+    <label><input type="checkbox" id="dontcopytitles" disabled> Do not copy site titles</label>
+    <label><input type="checkbox" id="copyonlycurrentwindow" disabled> Copy only currently focused window tabs</label>
+
+    <section id="problem" hidden>
+        <h2>The last copy failed</h2>
+        <p id="problem-summary"></p>
+        <p>
+            <a id="problem-report" target="_blank" rel="noopener noreferrer">Report this problem on GitHub</a>
+            <button id="problem-dismiss" type="button">Dismiss</button>
+        </p>
+        <details>
+            <summary>Technical details</summary>
+            <pre id="problem-details"></pre>
+        </details>
+        <p class="note">The report contains only these technical details, never your tabs' titles or addresses. Nothing is sent until you submit the issue on GitHub yourself.</p>
+    </section>
+
     <script src="options.js"></script>
 </body>
 </html>

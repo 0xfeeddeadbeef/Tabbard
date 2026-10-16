@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Copying tab URLs… – Tabbard</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            font-family: system-ui, sans-serif;
+        }
+
+        /* Out of sight but still selectable, which hidden or display: none elements are not. */
+        #text {
+            position: fixed;
+            top: 0;
+            left: -10000px;
+        }
+    </style>
+</head>
+<body>
+    <p>Tabbard is copying tab URLs to the clipboard. This tab closes by itself.</p>
+    <textarea id="text" aria-hidden="true" tabindex="-1"></textarea>
+    <script src="clipboard.js"></script>
+</body>
+</html>
