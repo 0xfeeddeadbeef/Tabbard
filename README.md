@@ -59,3 +59,13 @@ npm run test:e2e -- --browser firefox --channel nightly
 ```
 
 The end-to-end test downloads the browser into `~/.cache/tabbard-browsers`, opens a visible window and overwrites the clipboard, so leave the computer alone while it runs. On Linux it needs an X server, such as `xvfb-run`, and `xclip`. Run `node test/e2e.mjs` without arguments to see its options.
+
+### Expected warnings
+
+Chrome and Firefox share one `manifest.json`, so each browser warns about the parts meant for the other one. Each browser ignores the part it warns about and loads the rest, so these warnings need no fix:
+
+- **Chrome** (`chrome://extensions`): `'background.scripts' requires manifest version of 2 or lower.` Firefox needs `background.scripts` to run `background.js` as an event page. Chrome ignores it because `background.service_worker` is also set, and runs the service worker.
+- **Firefox** (`about:debugging` and the Browser Console): `Warning processing permissions: Error processing permissions.2: Value "offscreen" must either: …` Chrome needs the `offscreen` permission for its offscreen document. Firefox doesn't have the offscreen API, and [Mozilla doesn't plan to add it](https://bugzilla.mozilla.org/show_bug.cgi?id=1807830). Tabbard checks that the API exists before using it, so Firefox skips that clipboard method.
+- **`npm run lint:extension`:** reports the same `offscreen` permission and API calls. It also reports that `data_collection_permissions` needs Firefox 140 or later (142 on Android); older versions ignore the key. These are warnings, not errors, and don't block publishing on Firefox Add-ons.
+
+A separate manifest for each browser would remove these warnings, but would need a build step for each browser. You also couldn't load the folder straight into the browser any more.
