@@ -39,11 +39,14 @@ const TIMEOUT_MS = 20_000;
 const TITLE_COPY_ALL = 'Copy all tab URLs';
 const TITLE_COPY_SELECTED = 'Copy selected tab URLs';
 
-// How Tabbard should work when nothing changed in the browser. Anything else means that a
-// browser change forced Tabbard onto a fallback, which the canary reports.
+// How Tabbard should work when nothing changed in the browser: the background environment,
+// and the clipboard methods that may come first among those the browser offers. Anything else
+// means that a browser change forced Tabbard onto a fallback, which the canary reports.
 const EXPECTED = {
-    chrome: { environment: 'service worker', strategy: 'offscreen-document' },
-    firefox: { environment: 'document', strategy: 'clipboard-api' }
+    // Chrome 157 exposes the Clipboard API to extension service workers. Chrome 155 doesn't,
+    // so it copies through the offscreen document.
+    chrome: { environment: 'service worker', primaryStrategies: ['clipboard-api', 'offscreen-document'] },
+    firefox: { environment: 'document', primaryStrategies: ['clipboard-api'] }
 };
 
 const { values: args } = parseArgs({
@@ -163,8 +166,13 @@ async function runTests() {
 
     await check('Uses the primary clipboard method', async () => {
         assert.ok(firstCopy, 'There is no copy to inspect.');
-        assert.equal(firstCopy.response.strategy, expected.strategy,
-            `Copied through the "${firstCopy.response.strategy}" fallback instead of "${expected.strategy}". `
+        const primary = diagnostics?.strategies?.[0];
+        assert.ok(expected.primaryStrategies.includes(primary),
+            `The first clipboard method that the browser offers is "${primary}", not `
+            + `${expected.primaryStrategies.map((name) => `"${name}"`).join(' or ')}. `
+            + 'The browser changed which clipboard APIs extensions get.');
+        assert.equal(firstCopy.response.strategy, primary,
+            `Copied through the "${firstCopy.response.strategy}" fallback because "${primary}" failed. `
             + 'Users still get their copy, but the primary method stopped working in this browser.');
     });
 
