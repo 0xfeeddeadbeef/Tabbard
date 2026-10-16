@@ -94,7 +94,9 @@ async function runTests() {
     }
 
     const optionsPage = await instance.newPage();
-    await optionsPage.goto(`${extensionBase}options.html`);
+    // Firefox sends no WebDriver BiDi load events for extension pages (bug 1755014), so the
+    // navigation must not wait for them; waitForSelector() waits for the page instead.
+    await optionsPage.goto(`${extensionBase}options.html`, args.browser === 'firefox' ? { waitUntil: [] } : {});
     await optionsPage.waitForSelector('#dontcopytitles:not([disabled])', { timeout: TIMEOUT_MS });
     const inOptionsPage = (fn, ...fnArgs) => optionsPage.evaluate(fn, ...fnArgs);
 
@@ -339,6 +341,10 @@ function launchBrowser(name, executablePath) {
         browser: 'firefox',
         executablePath,
         headless: false,
+        // WebDriver BiDi treats extension pages as privileged. Without system access, Firefox
+        // refuses to navigate to moz-extension:// URLs (since Firefox 153) and to run scripts
+        // in extension pages. The --remote-allow-system-access flag was removed in Firefox 159.
+        env: { ...process.env, MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: '1' },
         extraPrefsFirefox: {
             'extensions.webextensions.uuids': JSON.stringify({ [GECKO_ID]: FIREFOX_EXTENSION_UUID })
         }
